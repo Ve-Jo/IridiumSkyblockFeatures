@@ -13,6 +13,12 @@ Custom Bukkit/Purpur addon for **IridiumSkyblock** focused on island NPCs and ho
 - Uses IridiumSkyblock placeholders in hologram lines for island stats and ownership details
 - Reuses existing NPCs where possible and cleans up duplicate NPC instances by type/location
 
+## Screenshot
+
+### Island manager NPC
+
+![Island manager NPC](docs/screenshots/island-manager-npc.jpg)
+
 ## Requirements
 
 - Bukkit/Paper/Purpur-compatible server
