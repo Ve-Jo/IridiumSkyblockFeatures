@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.ayosynk'
+version = '1.0.0'
+
+def deployTargetDir = providers.gradleProperty('deployTargetDir')
+
+sourceCompatibility = '21'
+targetCompatibility = '21'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url = 'https://repo.fancyplugins.de/releases'
+    }
+    maven {
+        name = "jitpack"
+        url = "https://jitpack.io"
+    }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
+    compileOnly 'de.oliver:FancyHolograms:2.9.1'
+    compileOnly 'com.github.MilkBowl:VaultAPI:1.7.1'
+}
+
+tasks.withType(JavaCompile).all {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+task deploy {
+    dependsOn tasks.jar
+    onlyIf { deployTargetDir.present }
+    doLast {
+        def source = tasks.jar.archivePath.toPath()
+        def targetDir = file(deployTargetDir.get()).toPath()
+        java.nio.file.Files.createDirectories(targetDir)
+        def target = targetDir.resolve(source.getFileName().toString())
+        java.nio.file.Files.copy(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
+if (deployTargetDir.present) {
+    build.dependsOn deploy
+}

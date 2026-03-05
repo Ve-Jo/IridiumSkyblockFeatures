@@ -1,0 +1,46 @@
+spawn-villager:
+  enabled: true
+  world: worlds
+  x: 0.5
+  y: 65.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+  name: 'Менеджер острова'
+  hologram:
+    enabled: false
+    y-offset: 2.7
+
+skyblock-worlds:
+  - IridiumSkyblock
+  - IridiumSkyblock_nether
+  - IridiumSkyblock_the_end
+
+island-villager:
+  enabled: true
+  name: 'Менеджер острова'
+  y-offset: 0.0
+  hologram:
+    enabled: true
+    y-offset: 2.7
+
+island-border-holograms:
+  enabled: false
+  default-size: 200.0
+  player-relative-y: true
+  player-y-offset: 1.8
+  y: 74.0
+  outside-offset: 0.8
+  update-seconds: 30
+
+text:
+  villager-hologram-lines:
+    - '&e&lМенеджер острова'
+    - '&7Остров: &a%iridiumskyblock_island_name% &8(&7Владелец: &f%iridiumskyblock_island_owner%&8)'
+    - '&7Уровень: &a%iridiumskyblock_island_level% &8• &7Опыт: &a%iridiumskyblock_island_experience%'
+    - '&7Ценность: &a%iridiumskyblock_island_value% &8• &7Ранг: &e#%iridiumskyblock_island_value_rank%'
+    - '&7Онлайн: &a%iridiumskyblock_island_members_online_count%&8/&a%iridiumskyblock_island_members_count%'
+    - '&7Ваш ранг: &b%iridiumskyblock_player_rank%'
+  border-hologram-lines:
+    - '{name}'
+    - 'Ур. {level} • {value}'
