@@ -5,6 +5,7 @@ import de.oliver.fancyholograms.api.HologramManager;
 import de.oliver.fancyholograms.api.data.HologramData;
 import de.oliver.fancyholograms.api.data.TextHologramData;
 import de.oliver.fancyholograms.api.hologram.Hologram;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -18,8 +19,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -60,6 +61,7 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
     private Boolean placeholderApiAvailable;
     private Method placeholderSetMethod;
 
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacySection();
 
     @Override
     public void onEnable() {
@@ -89,7 +91,6 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
 
         long intervalTicks = Math.max(20L, 20L * getConfig().getLong("island-border-holograms.update-seconds", 30));
         updateTask = Bukkit.getScheduler().runTaskTimer(this, this::updateAllHolograms, intervalTicks, intervalTicks);
-
     }
 
     @Override
@@ -101,7 +102,6 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
             removeHolograms(runtime.hologramNames);
         }
         playerBorders.clear();
-
     }
 
     @EventHandler
@@ -163,6 +163,7 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
 
         Location base = resolveIslandNpcLocation(player, info);
         if (base == null) {
+            removePlayerBorderHolograms(player);
             return;
         }
 
@@ -193,10 +194,18 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
             List<String> templates = normalizeCurrentIslandPlaceholders(getConfig().getStringList("text.villager-hologram-lines"));
             List<String> lines = formatLines(templates, info, player);
             upsertTextHologram(holoName, holoLoc, lines, org.bukkit.entity.Display.Billboard.VERTICAL);
-            runtime.npcHologramName = holoName;
         }
 
-        removePlayerBorderHolograms(player);
+        if (getConfig().getBoolean("island-border-holograms.enabled", false)) {
+            BorderInfo border = resolveIslandBorder(player);
+            if (border != null) {
+                upsertPlayerBorderHolograms(player, info, border);
+            } else {
+                removePlayerBorderHolograms(player);
+            }
+        } else {
+            removePlayerBorderHolograms(player);
+        }
     }
 
     private Location resolveIslandNpcLocation(Player player, IslandInfo info) {
@@ -396,8 +405,11 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
                 existing.teleport(loc);
             }
             if (name != null && !name.isBlank()) {
-                existing.setCustomName(name);
+                existing.customName(LEGACY_SERIALIZER.deserialize(name));
                 existing.setCustomNameVisible(true);
+            } else {
+                existing.customName(null);
+                existing.setCustomNameVisible(false);
             }
         }
 
@@ -550,9 +562,10 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
         villager.setPersistent(true);
 
         if (name != null && !name.isBlank()) {
-            villager.setCustomName(name);
+            villager.customName(LEGACY_SERIALIZER.deserialize(name));
             villager.setCustomNameVisible(true);
         } else {
+            villager.customName(null);
             villager.setCustomNameVisible(false);
         }
 
@@ -734,7 +747,6 @@ public class IridiumSkyblockFeaturesPlugin extends JavaPlugin implements Listene
 
     private static final class IslandRuntime {
         private UUID villagerUuid;
-        private String npcHologramName;
     }
 
     private static final class PlayerBorderRuntime {
